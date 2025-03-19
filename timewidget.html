@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Time Since Tracker</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Hubot+Sans:wght@400;500;600;700&display=swap"
+  rel="stylesheet">
+  <style>    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Hubot Sans', 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    }
+    
+    body {
+      background-color: #f0f8ff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: #333;
+    }
+    
+    .container {
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      width: 90%;
+      max-width: 500px;
+      overflow: hidden;
+    }
+    
+    .header {
+      background-color: #1e90ff;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      position: relative;
+    }
+    
+    .header h1 {
+      font-weight: 700;
+      font-size: 1.8rem;
+      margin-bottom: 5px;
+    }
+    
+    .header p {
+      font-weight: 300;
+      opacity: 0.9;
+    }
+    
+    .content {
+      padding: 25px;
+    }
+    
+    .time-display {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 25px;
+      text-align: center;
+    }
+    
+    .time-unit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .time-value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #1e90ff;
+      margin-bottom: 5px;
+    }
+    
+    .time-label {
+      font-size: 0.9rem;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .milestone-container {
+      margin: 25px 0;
+    }
+    
+    .milestone-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .milestone-header h2 {
+      font-weight: 500;
+      font-size: 1.2rem;
+    }
+    
+    .milestones {
+      border-radius: 8px;
+      background-color: #f8f9fa;
+      padding: 15px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    
+    .milestone {
+      display: flex;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #eaeaea;
+    }
+    
+    .milestone:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+    
+    .milestone-icon {
+      background-color: #e6f2ff;
+      color: #1e90ff;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-right: 15px;
+      flex-shrink: 0;
+    }
+    
+    .milestone-complete .milestone-icon {
+      background-color: #1e90ff;
+      color: white;
+    }
+    
+    .milestone-info {
+      flex-grow: 1;
+    }
+    
+    .milestone-title {
+      font-weight: 500;
+      margin-bottom: 3px;
+    }
+    
+    .milestone-days {
+      font-size: 0.85rem;
+      color: #666;
+    }
+    
+    .motivation {
+      background-color: #e6f2ff;
+      border-radius: 8px;
+      padding: 15px;
+      text-align: center;
+      margin: 25px 0;
+    }
+    
+    .motivation-quote {
+      font-style: italic;
+      margin-bottom: 8px;
+      font-weight: 400;
+    }
+    
+    .motivation-author {
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+    
+    .share-container {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    
+    .share-button {
+      background-color: #1e90ff;
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 12px 25px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      transition: 0.3s;
+    }
+    
+    .share-button:hover {
+      background-color: #1a7bdb;
+    }
+    
+    .share-button i {
+      margin-right: 8px;
+    }
+    
+    .event-form {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+    
+    .form-group input, .form-group textarea {
+      width: 100%;
+      padding: 10px 15px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-family: 'Hubot Sans', sans-serif;
+    }
+    
+    .form-group input[type="date"] {
+      color: #555;
+    }
+    
+    .form-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+    
+    .save-button, .cancel-button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    
+    .save-button {
+      background-color: #1e90ff;
+      color: white;
+    }
+    
+    .save-button:hover {
+      background-color: #1a7bdb;
+    }
+    
+    .cancel-button {
+      background-color: #f1f1f1;
+      color: #555;
+    }
+    
+    .cancel-button:hover {
+      background-color: #e1e1e1;
+    }
+
+    .add-milestone-btn {
+      background-color: transparent;
+      border: none;
+      color: #1e90ff;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+    }
+    
+    .add-milestone-btn i {
+      margin-right: 5px;
+    }
+    
+    .milestone-form {
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      display: none;
+    }
+    
+    .edit-event {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: none;
+      border: none;
+      color: white;
+      opacity: 0.8;
+      cursor: pointer;
+    }
+    
+    .edit-event:hover {
+      opacity: 1;
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    #copied-message {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 4px;
+      display: none;
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 id="event-title">Time Since...</h1>
+      <p id="event-description">Track your progress</p>
+      <button class="edit-event" id="edit-event-btn">
+        <i class="fas fa-edit"></i>
+      </button>
+    </div>
+    
+    <div class="content">
+      <!-- Time Display -->
+      <div class="time-display">
+        <div class="time-unit">
+          <div class="time-value" id="days">0</div>
+          <div class="time-label">Days</div>
+        </div>
+        <div class="time-unit">
+          <div class="time-value" id="hours">0</div>
+          <div class="time-label">Hours</div>
+        </div>
+        <div class="time-unit">
+          <div class="time-value" id="minutes">0</div>
+          <div class="time-label">Minutes</div>
+        </div>
+        <div class="time-unit">
+          <div class="time-value" id="seconds">0</div>
+          <div class="time-label">Seconds</div>
+        </div>
+      </div>
+      
+      <!-- Event Form (Hidden initially) -->
+      <div class="event-form hidden" id="event-form">
+        <div class="form-group">
+          <label for="event-name">Event Name</label>
+          <input type="text" id="event-name" placeholder="What are you tracking?">
+        </div>
+        <div class="form-group">
+          <label for="event-desc">Description (optional)</label>
+          <input type="text" id="event-desc" placeholder="Brief description">
+        </div>
+        <div class="form-group">
+          <label for="event-date">Start Date</label>
+          <input type="datetime-local" id="event-date">
+        </div>
+        <div class="form-buttons">
+          <button class="save-button" id="save-event-btn">Save</button>
+          <button class="cancel-button" id="cancel-event-btn">Cancel</button>
+        </div>
+      </div>
+      
+      <!-- Milestone Section -->
+      <div class="milestone-container">
+        <div class="milestone-header">
+          <h2>Milestones</h2>
+          <button class="add-milestone-btn" id="add-milestone-btn">
+            <i class="fas fa-plus"></i> Add
+          </button>
+        </div>
+        
+        <!-- Milestone Form (Hidden initially) -->
+        <div class="milestone-form hidden" id="milestone-form">
+          <div class="form-group">
+            <label for="milestone-title">Milestone Title</label>
+            <input type="text" id="milestone-title" placeholder="Achievement to reach">
+          </div>
+          <div class="form-group">
+            <label for="milestone-days">Days to Achievement</label>
+            <input type="number" id="milestone-days" min="1" placeholder="Number of days">
+          </div>
+          <div class="form-buttons">
+            <button class="save-button" id="save-milestone-btn">Add</button>
+            <button class="cancel-button" id="cancel-milestone-btn">Cancel</button>
+          </div>
+        </div>
+        
+        <div class="milestones" id="milestones-list">
+          <!-- Default milestones will be added here -->
+          <p style="text-align: center; color: #666;">No milestones added yet</p>
+        </div>
+      </div>
+      
+      <!-- Motivational Quote -->
+      <div class="motivation">
+        <p class="motivation-quote" id="motivation-quote">Every day is a new opportunity to grow stronger.</p>
+        <p class="motivation-author" id="motivation-author">Anonymous</p>
+      </div>
+      
+      <!-- Share Button -->
+      <div class="share-container">
+        <button class="share-button" id="share-btn">
+          <i class="fas fa-copy"></i> Copy My Progress
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Copied notification -->
+  <div id="copied-message">Copied to clipboard!</div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // DOM Elements
+      const daysEl = document.getElementById('days');
+      const hoursEl = document.getElementById('hours');
+      const minutesEl = document.getElementById('minutes');
+      const secondsEl = document.getElementById('seconds');
+      const eventTitleEl = document.getElementById('event-title');
+      const eventDescEl = document.getElementById('event-description');
+      const editEventBtn = document.getElementById('edit-event-btn');
+      const eventForm = document.getElementById('event-form');
+      const eventNameInput = document.getElementById('event-name');
+      const eventDescInput = document.getElementById('event-desc');
+      const eventDateInput = document.getElementById('event-date');
+      const saveEventBtn = document.getElementById('save-event-btn');
+      const cancelEventBtn = document.getElementById('cancel-event-btn');
+      const addMilestoneBtn = document.getElementById('add-milestone-btn');
+      const milestoneForm = document.getElementById('milestone-form');
+      const milestoneTitleInput = document.getElementById('milestone-title');
+      const milestoneDaysInput = document.getElementById('milestone-days');
+      const saveMilestoneBtn = document.getElementById('save-milestone-btn');
+      const cancelMilestoneBtn = document.getElementById('cancel-milestone-btn');
+      const milestonesList = document.getElementById('milestones-list');
+      const quoteEl = document.getElementById('motivation-quote');
+      const authorEl = document.getElementById('motivation-author');
+      const shareBtn = document.getElementById('share-btn');
+      const copiedMessage = document.getElementById('copied-message');
+      
+      // In-memory data (instead of localStorage)
+      let eventData = {
+        title: 'Time Since...',
+        description: 'Track your progress',
+        date: new Date()
+      };
+      
+      let milestones = [];
+      
+      // Motivational quotes
+      const quotes = [
+        { quote: "Every day is a new opportunity to grow stronger.", author: "Anonymous" },
+        { quote: "Progress is not always linear. Keep going.", author: "Anonymous" },
+        { quote: "Small steps lead to big changes over time.", author: "Anonymous" },
+        { quote: "The journey of a thousand miles begins with a single step.", author: "Lao Tzu" },
+        { quote: "Your only limit is the one you set yourself.", author: "Anonymous" },
+        { quote: "Success is the sum of small efforts repeated day in and day out.", author: "Robert Collier" },
+        { quote: "The difference between try and triumph is a little umph.", author: "Marvin Phillips" },
+        { quote: "Persistence guarantees that results are inevitable.", author: "Paramahansa Yogananda" }
+      ];
+      
+      // Initialize default view
+      function initialize() {
+        // Set default date to now and show form on first visit
+        const now = new Date();
+        const dateString = now.toISOString().slice(0, 16);
+        eventDateInput.value = dateString;
+        toggleEventForm();
+        
+        // Set random motivation quote
+        setRandomQuote();
+        
+        // Start the countdown
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+      }
+      
+      // Calculate and update the countdown
+      function updateCountdown() {
+        const now = new Date();
+        const diff = now - eventData.date;
+        
+        if (diff < 0) {
+          // If event date is in the future
+          daysEl.innerText = '0';
+          hoursEl.innerText = '0';
+          minutesEl.innerText = '0';
+          secondsEl.innerText = '0';
+          return;
+        }
+        
+        // Calculate time units
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        
+        // Update DOM
+        daysEl.innerText = days;
+        hoursEl.innerText = hours;
+        minutesEl.innerText = minutes;
+        secondsEl.innerText = seconds;
+        
+        // Check milestones
+        updateMilestones(days);
+      }
+      
+      // Set a random motivational quote
+      function setRandomQuote() {
+        const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+        quoteEl.textContent = randomQuote.quote;
+        authorEl.textContent = randomQuote.author;
+      }
+      
+      // Toggle event form visibility
+      function toggleEventForm() {
+        eventForm.classList.toggle('hidden');
+        
+        if (!eventForm.classList.contains('hidden')) {
+          // Populate form with current values
+          eventNameInput.value = eventData.title;
+          eventDescInput.value = eventData.description;
+          
+          // Format date for input
+          if (eventData.date) {
+            const dateString = eventData.date.toISOString().slice(0, 16);
+            eventDateInput.value = dateString;
+          }
+        }
+      }
+      
+      // Toggle milestone form visibility
+      function toggleMilestoneForm() {
+        milestoneForm.classList.toggle('hidden');
+        if (!milestoneForm.classList.contains('hidden')) {
+          milestoneTitleInput.value = '';
+          milestoneDaysInput.value = '';
+        }
+      }
+      
+      // Save event details
+      function saveEvent() {
+        const title = eventNameInput.value.trim() || 'Time Since...';
+        const description = eventDescInput.value.trim() || 'Track your progress';
+        const date = new Date(eventDateInput.value);
+        
+        // Update memory data
+        eventData = {
+          title,
+          description,
+          date
+        };
+        
+        // Update display
+        eventTitleEl.textContent = title;
+        eventDescEl.textContent = description;
+        
+        // Hide form
+        toggleEventForm();
+      }
+      
+      // Save milestone
+      function saveMilestone() {
+        const title = milestoneTitleInput.value.trim();
+        const days = parseInt(milestoneDaysInput.value);
+        
+        if (!title || isNaN(days) || days < 1) {
+          alert('Please enter a valid title and number of days');
+          return;
+        }
+        
+        // Add new milestone
+        milestones.push({
+          id: Date.now(),
+          title,
+          days,
+          completed: false
+        });
+        
+        // Sort by days
+        milestones.sort((a, b) => a.days - b.days);
+        
+        // Render milestones and hide form
+        renderMilestones();
+        toggleMilestoneForm();
+      }
+      
+      // Render milestones
+      function renderMilestones() {
+        milestonesList.innerHTML = '';
+        
+        if (milestones.length === 0) {
+          milestonesList.innerHTML = '<p style="text-align: center; color: #666;">No milestones added yet</p>';
+          return;
+        }
+        
+        milestones.forEach(milestone => {
+          const milestoneEl = document.createElement('div');
+          milestoneEl.className = `milestone ${milestone.completed ? 'milestone-complete' : ''}`;
+          milestoneEl.innerHTML = `
+            <div class="milestone-icon">
+              ${milestone.completed ? '<i class="fas fa-check"></i>' : milestone.days}
+            </div>
+            <div class="milestone-info">
+              <div class="milestone-title">${milestone.title}</div>
+              <div class="milestone-days">${milestone.days} day${milestone.days !== 1 ? 's' : ''}</div>
+            </div>
+          `;
+          milestonesList.appendChild(milestoneEl);
+        });
+      }
+      
+      // Update milestones based on days passed
+      function updateMilestones(daysPassed) {
+        let updated = false;
+        
+        milestones.forEach(milestone => {
+          if (daysPassed >= milestone.days && !milestone.completed) {
+            milestone.completed = true;
+            updated = true;
+          }
+        });
+        
+        if (updated) {
+          renderMilestones();
+        }
+      }
+      
+      // Copy progress to clipboard
+      function copyProgress() {
+        const days = daysEl.innerText;
+        const title = eventTitleEl.textContent;
+        const text = `I've reached ${days} days since ${title}! 🎉`;
+        
+        // Create a temporary textarea element
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        
+        // Select the text
+        textarea.select();
+        
+        try {
+          // Copy the text
+          document.execCommand('copy');
+          
+          // Show copied message
+          copiedMessage.style.display = 'block';
+          setTimeout(() => {
+            copiedMessage.style.display = 'none';
+          }, 2000);
+        } catch (err) {
+          console.error('Could not copy text: ', err);
+          alert('Text to copy: ' + text);
+        }
+        
+        // Remove the temporary textarea
+        document.body.removeChild(textarea);
+      }
+      
+      // Event Listeners
+      editEventBtn.addEventListener('click', toggleEventForm);
+      saveEventBtn.addEventListener('click', saveEvent);
+      cancelEventBtn.addEventListener('click', toggleEventForm);
+      addMilestoneBtn.addEventListener('click', toggleMilestoneForm);
+      saveMilestoneBtn.addEventListener('click', saveMilestone);
+      cancelMilestoneBtn.addEventListener('click', toggleMilestoneForm);
+      shareBtn.addEventListener('click', copyProgress);
+      
+      // Initialize the app
+      initialize();
+    });
+  </script>
+</body>
+</html>
